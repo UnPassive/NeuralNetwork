@@ -38,14 +38,40 @@ public class NeuralNetwork
 		this.nodes = nodes;		//maybe pass in an array if by layer
 		this.outputs = outputs;
 		//To-Do: construct layers of Neurons
-		//To-Do: begin computations Neuron by Neuron, layer by layer
+		//To-Do: begin computations Neuron by Neuron, layer by layer, to create output
 		
 		
+	}
+	
+	private void generateData(int version)
+	{
+		//Rosenbrock function here
+		if(version == 2)
+		{
+			
+		}
+		else if(version == 3)
+		{
+			
+		}
+		else if(version == 4)
+		{
+			//I'm assuming each version will have to execute completely differently
+		}
+		else if(version == 5)
+		{
+			
+		}
+		else if(version ==6)
+		{
+			
+		}
 	}
 	
 	private void backProp()
 	{
 		//BackProp should be possible by using Neuron IDs to go back through network and update weights
+		
 	}
 
 }
