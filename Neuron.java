@@ -14,9 +14,8 @@ public class Neuron
 
 	public static void main(String[] args) 
 	{
-		/*do weights go on the connections or on the nodes themselves?
-		*if on nodes then add setWeight() and getWeight()
-		*if not then do we need to store the connection and the weight of the connection?
+		/*
+		*add setWeight() and getWeight()
 		*/
 	}
 
@@ -42,12 +41,12 @@ public class Neuron
 	
 	public double computeOutput()
 	{
-		//insert bias nodes here or handle directly in drive? Use bias nodes at all?
+		//insert bias nodes here or handle directly in drive? Handle in driver.
 		double summation = 0;
 		for(Double outs: prevLayerOutputs)
 		{
 			summation = summation + outs;			//perform summation of prevLayerOutputs
-			//does the summation function have any special computations I'm forgetting?
+			//fix this to match actual summation function
 		}
 		double output = activationFun(summation);
 		
@@ -62,6 +61,8 @@ public class Neuron
 	private double activationFun(double o)
 	{
 		//To-Do: code activation functions. Specify what kind in driver and update booleans in Neuron class variables
+		
+		//if output layer, activation function has to be linear
 		if(radialBiasActFun)
 		{
 			//activation function here

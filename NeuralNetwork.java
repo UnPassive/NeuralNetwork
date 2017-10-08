@@ -26,10 +26,10 @@ public class NeuralNetwork
 			//if we ask the user for inputs instead of making them command line inputs it may be easier
 			//also ask for what kind of Neural network this is
 		}
-		String in = args[0];
-		String hid = args[1];
-		String node = args[2];
-		String out = args[3];
+		String in = args[1];
+		String hid = args[2];
+		String node = args[3];
+		String out = args[4];
 		//parse to ints and construct new NeuralNetwork(in, hid, node, out);
 
 		Neuron.radialBiasActFun = true;		//if Radial Basis network
@@ -57,6 +57,9 @@ public class NeuralNetwork
 			//Then backpropagate once last layer is reached
 
 			isConverged();		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
+			
+			//once converged test performance on held-out data
+			//performanceMethodCheck()
 		}
 		//if did converge then loop terminates
 		// then call print(NeuralNetwork); to see outputs, weights and error values
@@ -69,7 +72,7 @@ public class NeuralNetwork
 		this.nodes = nodes;			//maybe pass in an array if number of nodes is by layer. Would require some sort of console input instructions
 		this.outputs = outputs;		//just one output for this project's implementation of the code.
 		//To-Do: initialize random weights
-		//Oh and figure out how to store said weights
+		//Create wights double array and methods to get and update a weight
 
 		for(int i = 0; i < hiddenL; i++)		//construct layer by layer
 		{
@@ -100,6 +103,8 @@ public class NeuralNetwork
 					outLayer.add(n);
 				}
 			}
+			
+			//Add bias node to each layer
 		}
 		//Then add connections to all the nodes:   n.addConnection(nextLayerNode[i]);
 
@@ -124,6 +129,7 @@ public class NeuralNetwork
 	private void generateData(int version)
 	{
 		//Rosenbrock function here
+		//normalized data for radial basis and MLF networks have different ranges
 		if(version == 2)		//we have to do the five versions (2-6 dimensions)
 		{
 
@@ -154,6 +160,10 @@ public class NeuralNetwork
 
 	private void backProp()
 	{
+		/* calculate error (means squared error)
+		 * create global average error value to update each backProp() for isConverged() to check.
+		 */
+		
 		/*BackProp should be possible by using Neuron IDs to go back through network and update weights
 		 * based on closeness to true value. 
 		 */
@@ -161,10 +171,15 @@ public class NeuralNetwork
 		//neuron.updateWeight(double w);
 	}
 	
+	private void performanceMetricCheck()
+	{
+		//uses the withheld data to run through weighted network and check means squared error
+	}
+	
 	private void print(NeuralNetwork n)
 	{
 		//To-Do: format print method to:
-		//print neural network output,
+		//print neural network output, error, and number of runs
 		//while testing print weights and error and maybe nodes (to make sure they initialized correctly)
 	}
 
