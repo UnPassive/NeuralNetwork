@@ -8,14 +8,16 @@ public class Neuron
 	static boolean radialBiasActFun = false;	//set whichever to true for type of neural network
 	static boolean MLFActFun = false;			//these are for the activation function
 	static int counter = 0; 	//global neuron count
-	final public int id;		//might need individual node IDs for backprop
-	ArrayList<Neuron> connections = new ArrayList<Neuron>();	//list of nodes this node is connected to (next layer of network)
-	List<Double> prevLayerOutputs = new ArrayList<Double>();	//is this right? This way neuron can receive previous layer's outputs and then compute summation later
+	public final int id;		//might need an individual node ID for backprop
+	private ArrayList<Neuron> connections = new ArrayList<Neuron>();	//list of nodes this node is connected to (next layer of network)
+	private List<Double> prevLayerOutputs = new ArrayList<Double>();	//This way neuron can receive previous layer's outputs dinamically and then compute summation later
 
 	public static void main(String[] args) 
 	{
-		//weights go on the connections or on the nodes themselves?
-		//if on nodes then add setWeight() and getWeight()
+		/*do weights go on the connections or on the nodes themselves?
+		*if on nodes then add setWeight() and getWeight()
+		*if not then do we need to store the connection and the weight of the connection?
+		*/
 	}
 
 	public Neuron()
@@ -33,13 +35,12 @@ public class Neuron
 		 */
 	}
 	
-	public void addOutput(double o)
+	public void addInput(double o)
 	{
 		prevLayerOutputs.add(o);		//receives and stores a previous layer's node's output
 	}
 	
 	public double computeOutput()
-	
 	{
 		//insert bias nodes here or handle directly in drive? Use bias nodes at all?
 		double summation = 0;
@@ -50,7 +51,12 @@ public class Neuron
 		}
 		double output = activationFun(summation);
 		
-		return 0; //summation of all connections ran through activation function
+		return output; //summation of all connections ran through activation function
+	}
+	
+	public void updateWeight(double w)
+	{
+		//for backpropagation function in Driver
 	}
 	
 	private double activationFun(double o)
