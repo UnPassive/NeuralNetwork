@@ -1,6 +1,9 @@
 package src;
 
 import java.util.ArrayList;
+import java.lang.Integer;
+import java.lang.Math;
+import java.util.Random;
 
 
 public class NeuralNetwork 
@@ -18,7 +21,8 @@ public class NeuralNetwork
 	 *weights available for layers 3+. Otherwise just multiple double arrays with -1 as null value? or 
 	 *wait isn't a connection weight of 0 the same as no connection?
 	 */
-
+        Double[][] weights =  null;
+        
 	public static void main(String[] args) 
 	{
 		for (int i = 0; i < args.length; i++) 
@@ -120,10 +124,27 @@ public class NeuralNetwork
 
 		//update converged class variable here
 	}
-
+        
+        /**
+         * Weight initialization method
+         */
 	private void initRandomWeights()
 	{
-		//update the hashmap/weights table to random values
+            //update the hashmap/weights table to random values
+            int dim = inLayer.size() + hiddenLayer.size() + outLayer.size();
+            this.weights = new Double[dim][dim];
+            double randUpperBound = Math.sqrt(6/(inLayer.size()+outLayer.size()));      // according to https://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
+            double randLowerBound = randUpperBound * -1;
+            Random rand = new Random();
+            for(int i = 0; i < dim; i++) {
+                for(int j = 0; j < dim; j ++) {
+                    double holder = rand.nextDouble();
+                    while(holder == 0) {
+                        holder = rand.nextDouble();
+                    }
+                    this.weights[i][j] = randLowerBound + (randUpperBound - randLowerBound) * holder;
+                }
+            }
 	}
 
 	private void generateData(int version)
