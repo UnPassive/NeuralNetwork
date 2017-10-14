@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class NeuralNetwork 
 {
-	static boolean converged = false;
+	boolean converged = false;
 	int inputs;
 	int hiddenL;
 	int nodes;		//nodes by layer?
@@ -16,6 +16,7 @@ public class NeuralNetwork
 	ArrayList<Neuron> hiddenLayer = new ArrayList<Neuron>();	//make these dynamically
 	ArrayList<Neuron> outLayer = new ArrayList<Neuron>();
 	Double[][] weights =  null;
+	double[] expectedOutputs;
 	static int error;
 
 	public static void main(String[] args) 
@@ -32,7 +33,7 @@ public class NeuralNetwork
 		//parse to ints and construct new NeuralNetwork(in, hid, node, out);
 
 		Neuron.radialBiasActFun = true;		//if Radial Basis network
-		//Neuron.MLFActFun = true; 			  if MLF network
+		//Neuron.MLFActFun = true; 			//if MLF network
 
 		NeuralNetwork net = new NeuralNetwork(1, 1, 1,1);
 		net.train(net);
@@ -68,7 +69,7 @@ public class NeuralNetwork
 
 				}
 			}
-			if(i == hiddenL || i == 1)	//output layer, will be constructed even if just one 
+			if(i == hiddenL || i == 1)	//output layer, will be constructed even if just one hidden layer
 			{
 				for(int j = 0; j < outputs; j++)
 				{
@@ -94,17 +95,19 @@ public class NeuralNetwork
 				n.addConnection(outLayer.get(i));
 			}
 		}
+		initRandomWeights();
 
 	}
-	private static void isConverged()
+	private boolean isConverged()
 	{
 		/*some method to check if converged
 		 *Should take into account a maxRuns value and minimum acceptable error value 
-		 *When minimum Error is achieved then it's converged?
+		 *When minimum Error is achieved then it's converged
 		 *Otherwise just stop at maxRuns and print results (current error?)
 		 */
 
 		//update converged class variable here
+		return converged;
 	}
 
 	private void train(NeuralNetwork net)
@@ -112,9 +115,8 @@ public class NeuralNetwork
 
 		while(!converged) 		//train network
 		{
-			/* To-Do: begin computations layer by layer, Neuron by Neuron to create final output.
-			 * activation function and such are stored in Neuron class
-			 */
+			expectedOutputs = new double[inputs];
+			//input these from rosenbrock function based on inputs
 
 			error = 0;
 			for(Neuron n: inLayer )
@@ -122,36 +124,40 @@ public class NeuralNetwork
 				double ros = 1;		//change to rosenbrock function outputs
 				n.addInput(ros);
 				//hidden layer activation function??
-				
+				for(Neuron h: hiddenLayer) //add to all nodes in next layer
+				{
+					h.addInput(ros); 		/**change ros to activation function if there is one*/
+				}
 			}
 
 			for(Neuron n: hiddenLayer)
 			{
-				n.computeOutput();
-				
-				
+				double hiddenOut = n.computeOutput(); 	// Then tell the neuron to compute its output
+				for(Neuron o: outLayer)
+				{
+					o.addInput(hiddenOut);				//Then pass that output into the inputs of the next layer nodes
+				}
 			}
-			
-			/* To add an output the next layer's neuron's input:
-			 * nextLayerNeuron.addInput(doubleValueOfOutput)
-			 */
+			double[] networkOutput = new double[outLayer.size()];	//linearly activate by using this array of values
+			int iter = 0;
+			for(Neuron o: outLayer)
+			{
+				double out = o.computeOutput();
+				networkOutput[iter] = out;
+				expectedOutputs[iter] = 1; 		/**change 1 to expected value based on input */
+				double e = Math.pow(out - expectedOutputs[iter], 2);
+				iter++;
+			}
 
-			/* Then tell the neuron to compute its output with:
-			 * double output = n.computeOutput()
-			 */
-
-			//Then pass that output into the inputs of the next layer nodes
-
-			//Then move on to computing next layers outputs
-
-			//Then backpropagate once last layer is reached
-
-			isConverged();		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
-
+			if(isConverged())		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
+			{
+				break; 		//no need to backprop
+			}
 			//once converged test performance on held-out data
 			//performanceMethodCheck()
+			
+			backProp();	
 		}
-		//if did converge then loop terminates
 		// then call print(NeuralNetwork); to see outputs, weights and error values
 
 	}
