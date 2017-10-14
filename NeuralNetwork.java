@@ -1,7 +1,6 @@
 package src;
 
 import java.util.ArrayList;
-import java.lang.Integer;
 import java.lang.Math;
 import java.util.Random;
 
@@ -16,13 +15,9 @@ public class NeuralNetwork
 	ArrayList<Neuron> inLayer = new ArrayList<Neuron>();
 	ArrayList<Neuron> hiddenLayer = new ArrayList<Neuron>();	//make these dynamically
 	ArrayList<Neuron> outLayer = new ArrayList<Neuron>();
-	/*use hashmap for connection lookup instead of double array? I think its scalable and allows
-	 *for null values so layer two could lookup its connections with layer one before there were any
-	 *weights available for layers 3+. Otherwise just multiple double arrays with -1 as null value? or 
-	 *wait isn't a connection weight of 0 the same as no connection?
-	 */
-        Double[][] weights =  null;
-        
+	Double[][] weights =  null;
+	static int error;
+
 	public static void main(String[] args) 
 	{
 		for (int i = 0; i < args.length; i++) 
@@ -39,34 +34,8 @@ public class NeuralNetwork
 		Neuron.radialBiasActFun = true;		//if Radial Basis network
 		//Neuron.MLFActFun = true; 			  if MLF network
 
-		while(!converged) 		//train network
-		{
-			/* To-Do: begin computations layer by layer, Neuron by Neuron to create final output.
-			 * activation function and such are stored in Neuron class
-			 */
-
-
-			/* To add an output the next layer's neuron's input:
-			 * nextLayerNeuron.addInput(doubleValueOfOutput)
-			 */
-
-			/* Then tell the neuron to compute its output with:
-			 * double output = n.computeOutput()
-			 */
-
-			//Then pass that output into the inputs of the next layer nodes
-
-			//Then move on to computing next layers outputs
-
-			//Then backpropagate once last layer is reached
-
-			isConverged();		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
-			
-			//once converged test performance on held-out data
-			//performanceMethodCheck()
-		}
-		//if did converge then loop terminates
-		// then call print(NeuralNetwork); to see outputs, weights and error values
+		NeuralNetwork net = new NeuralNetwork(1, 1, 1,1);
+		net.train(net);
 	}
 
 	public NeuralNetwork(int inputs, int hiddenL, int nodes, int outputs)
@@ -86,7 +55,7 @@ public class NeuralNetwork
 				{
 					//inputs form Rosenbrock function
 					Neuron n = new Neuron();
-					n.addInput(0);		//change 0 to rosenbrock function outputs
+					//n.addInput(0);		//add inputs in train function
 					inLayer.add(n);
 				}
 			}
@@ -107,11 +76,24 @@ public class NeuralNetwork
 					outLayer.add(n);
 				}
 			}
-			
+
 			//Add bias node to each layer
 		}
-		//Then add connections to all the nodes:   n.addConnection(nextLayerNode[i]);
-
+		//add next connections to next layer:
+		for(Neuron n: inLayer)
+		{
+			for(int i = 0; i < hiddenLayer.size(); i++)
+			{
+				n.addConnection(hiddenLayer.get(i));
+			}
+		}
+		for(Neuron n: hiddenLayer)
+		{
+			for(int i = 0; i < outLayer.size(); i++)
+			{
+				n.addConnection(outLayer.get(i));
+			}
+		}
 
 	}
 	private static void isConverged()
@@ -124,27 +106,76 @@ public class NeuralNetwork
 
 		//update converged class variable here
 	}
-        
-        /**
-         * Weight initialization method
-         */
+
+	private void train(NeuralNetwork net)
+	{
+
+		while(!converged) 		//train network
+		{
+			/* To-Do: begin computations layer by layer, Neuron by Neuron to create final output.
+			 * activation function and such are stored in Neuron class
+			 */
+
+			error = 0;
+			for(Neuron n: inLayer )
+			{
+				double ros = 1;		//change to rosenbrock function outputs
+				n.addInput(ros);
+				//hidden layer activation function??
+				
+			}
+
+			for(Neuron n: hiddenLayer)
+			{
+				n.computeOutput();
+				
+				
+			}
+			
+			/* To add an output the next layer's neuron's input:
+			 * nextLayerNeuron.addInput(doubleValueOfOutput)
+			 */
+
+			/* Then tell the neuron to compute its output with:
+			 * double output = n.computeOutput()
+			 */
+
+			//Then pass that output into the inputs of the next layer nodes
+
+			//Then move on to computing next layers outputs
+
+			//Then backpropagate once last layer is reached
+
+			isConverged();		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
+
+			//once converged test performance on held-out data
+			//performanceMethodCheck()
+		}
+		//if did converge then loop terminates
+		// then call print(NeuralNetwork); to see outputs, weights and error values
+
+	}
+
+	/**
+	 * Weight initialization method
+	 */
 	private void initRandomWeights()
 	{
-            //update the hashmap/weights table to random values
-            int dim = inLayer.size() + hiddenLayer.size() + outLayer.size();
-            this.weights = new Double[dim][dim];
-            double randUpperBound = Math.sqrt(6/(inLayer.size()+outLayer.size()));      // according to https://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
-            double randLowerBound = randUpperBound * -1;
-            Random rand = new Random();
-            for(int i = 0; i < dim; i++) {
-                for(int j = 0; j < dim; j ++) {
-                    double holder = rand.nextDouble();
-                    while(holder == 0) {
-                        holder = rand.nextDouble();
-                    }
-                    this.weights[i][j] = randLowerBound + (randUpperBound - randLowerBound) * holder;
-                }
-            }
+		//update the hashmap/weights table to random values
+		int dim = inLayer.size() + hiddenLayer.size() + outLayer.size();
+		this.weights = new Double[dim][dim];
+		double randUpperBound = Math.sqrt(6/(inLayer.size()+outLayer.size()));      // according to https://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
+		double randLowerBound = randUpperBound * -1;
+		Random rand = new Random();
+		for(int i = 0; i < dim; i++) {
+			for(int j = 0; j < dim; j ++) {
+				double holder = rand.nextDouble();
+				while(holder == 0) {
+					holder = rand.nextDouble();
+				}
+				this.weights[i][j] = randLowerBound + (randUpperBound - randLowerBound) * holder;
+			}
+		}
 	}
 
 	private void generateData(int version)
@@ -184,19 +215,19 @@ public class NeuralNetwork
 		/* calculate error (means squared error)
 		 * create global average error value to update each backProp() for isConverged() to check.
 		 */
-		
+
 		/*BackProp should be possible by using Neuron IDs to go back through network and update weights
 		 * based on closeness to true value. 
 		 */
 
 		//neuron.updateWeight(double w);
 	}
-	
+
 	private void performanceMetricCheck()
 	{
 		//uses the withheld data to run through weighted network and check means squared error
 	}
-	
+
 	private void print(NeuralNetwork n)
 	{
 		//To-Do: format print method to:

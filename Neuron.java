@@ -41,7 +41,6 @@ public class Neuron
 	
 	public double computeOutput()
 	{
-		//insert bias nodes here or handle directly in drive? Handle in driver.
 		double summation = 0;
 		for(Double outs: prevLayerOutputs)
 		{
@@ -56,6 +55,7 @@ public class Neuron
 	public void updateWeight(double w)
 	{
 		//for backpropagation function in Driver
+		//based off of ID
 	}
 	
 	private double activationFun(double o)
