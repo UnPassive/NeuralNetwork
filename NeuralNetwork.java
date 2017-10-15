@@ -1,6 +1,7 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.lang.Math;
 import java.util.Random;
 
@@ -17,9 +18,13 @@ public class NeuralNetwork
 	ArrayList<Neuron> outLayer = new ArrayList<Neuron>();
 	Double[][] weights =  null;			//weights[i][j] = weight at connection node i to node j
 	Double[][] prevDeltaWeights = null;
+	double[] networkOutput;
 	double[] expectedOutputs;
 	double learningRate = .5;			//CHANGE THIS to a real learning rate!
-	int error;
+	double error;
+	double aveError;
+	int maxRuns = 3000;
+	double minError = 0.0001;
   
 	public static void main(String[] args) 
 	{
@@ -100,17 +105,37 @@ public class NeuralNetwork
 		initRandomWeights();
 
 	}
+	
 	private boolean isConverged()
 	{
-		/*some method to check if converged
-		 *Should take into account a maxRuns value and minimum acceptable error value 
-		 *When minimum Error is achieved then it's converged
-		 *Otherwise just stop at maxRuns and print results (current error?)
-		 */
+		if(maxRuns <= 0)
+		{
+			if(aveError <= minError)
+			{
+				System.out.println("Hey the Neural Network converged on its last run!");
+				converged = true;
+				print(this);
+			}
+			else
+			{
+				System.out.println("Max runs reached; Neural Network did not converge.");
+				converged = true;		//so that training stops
+				print(this);
+			}
+		}
+		else
+		{
+			if(aveError <= minError)
+			{
+				System.out.println("Neural Network converged");
+				converged = true;
+				print(this);
+			}
+		}
 		
 		//oh and overfitting
+		//a large enough difference in the aveError and testing data error based on acceleration of the difference
 
-		//update converged class variable here
 		return converged;
 	}
 
@@ -143,7 +168,7 @@ public class NeuralNetwork
 					o.addInput(hiddenOut);				//Then pass that output into the inputs of the next layer nodes
 				}
 			}
-			double[] networkOutput = new double[outLayer.size()];	//linearly activate by using this array of values
+			networkOutput = new double[outLayer.size()];	//linearly activate by using this array of values
 			int iter = 0;
 			for(Neuron o: outLayer)
 			{
@@ -154,7 +179,7 @@ public class NeuralNetwork
 				error += e;		//for sum of output errors
 				iter++;
 			}
-			/**for ave error: error = error/outLayer.size();*/
+			aveError = error/outLayer.size();
 
 			if(isConverged())		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
 			{
@@ -218,11 +243,6 @@ public class NeuralNetwork
 		}
 	}
 
-	private double checkValue(double output)	//check how close output was to true Rosenbrock
-	{
-		//some sort of closeness-to-true-value error measurement system here. [0, 1] probably
-		return 0;
-	}
 
 	private void backProp()
 	{
@@ -289,9 +309,37 @@ public class NeuralNetwork
 
 	private void print(NeuralNetwork n)
 	{
-		//To-Do: format print method to:
-		//print neural network output, error, and number of runs
-		//while testing print weights and error and maybe nodes (to make sure they initialized correctly)
+		printWeights();
+		System.out.println("Outputs: " + Arrays.asList(networkOutput));
+		System.out.println("Error: " + aveError);
+		
+		//print number of runs
+	}
+	
+	private void printWeights()
+	{
+		int i = 0;
+		System.out.println("Input Layer to Hidden Layer:");
+		for(i = 0; i < inLayer.size();i++)
+		{
+			double[] ws = new double[inLayer.size()];
+			for(int j = 0; j < hiddenLayer.size(); j++)
+			{
+				ws[j] = weights[i][j];
+			}
+			System.out.println("Node " + i + ": " + Arrays.asList(ws));
+		}
+		
+		System.out.println("Hidden Layer to Output Layer:");
+		for(i = inLayer.size() + 1; i < hiddenLayer.size();i++)
+		{
+			double[] ws = new double[hiddenLayer.size()];
+			for(int j = hiddenLayer.size() + 1; j < outLayer.size(); j++)
+			{
+				ws[j] = weights[i][j];
+			}
+			System.out.println("Node " + i + ": " + Arrays.asList(ws));
+		}
 	}
 
 }
