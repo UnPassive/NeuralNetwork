@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.lang.Math;
 import java.util.List;
 import java.util.Random;
@@ -30,6 +31,7 @@ public class NeuralNetwork {
 
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
+
 			//if we ask the user for inputs instead of making them command line inputs it may be easier
             //also ask for what kind of Neural network this is
         }
@@ -39,7 +41,7 @@ public class NeuralNetwork {
         String out = args[3];
 		//parse to ints and construct new NeuralNetwork(in, hid, node, out);
 
-		//Neuron.radialBiasActFun = true;		//if Radial Basis network
+    //Neuron.radialBiasActFun = true;		//if Radial Basis network
         //Neuron.MLFActFun = true; 			//if MLF network
         NeuralNetwork net = new NeuralNetwork(Integer.parseInt(in), Integer.parseInt(hid), Integer.parseInt(node), Integer.parseInt(out));
         net.loadData(Integer.parseInt(in));
@@ -96,7 +98,6 @@ public class NeuralNetwork {
         initRandomWeights();
     }
 
-    //Loads the dataset from the correct csv file. You must adjust "pathToData" instance variable above
     public void loadData(int dimension) {
         this.inputVector = new ArrayList[dimension];
         for (int i = 0; i < dimension; i++) {
@@ -324,5 +325,4 @@ public class NeuralNetwork {
         //print neural network output, error, and number of runs
         //while testing print weights and error and maybe nodes (to make sure they initialized correctly)
     }
-
 }
