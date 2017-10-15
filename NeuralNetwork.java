@@ -15,9 +15,11 @@ public class NeuralNetwork
 	ArrayList<Neuron> inLayer = new ArrayList<Neuron>();
 	ArrayList<Neuron> hiddenLayer = new ArrayList<Neuron>();	//make these dynamically
 	ArrayList<Neuron> outLayer = new ArrayList<Neuron>();
-	Double[][] weights =  null;
+	Double[][] weights =  null;			//weights[i][j] = weight at connection node i to node j
+	Double[][] prevDeltaWeights = null;
 	double[] expectedOutputs;
-	static int error;
+	double learningRate = .5;			//CHANGE THIS to a real learning rate!
+	int error;
 
 	public static void main(String[] args) 
 	{
@@ -105,6 +107,8 @@ public class NeuralNetwork
 		 *When minimum Error is achieved then it's converged
 		 *Otherwise just stop at maxRuns and print results (current error?)
 		 */
+		
+		//oh and overfitting
 
 		//update converged class variable here
 		return converged;
@@ -126,13 +130,14 @@ public class NeuralNetwork
 				//hidden layer activation function??
 				for(Neuron h: hiddenLayer) //add to all nodes in next layer
 				{
-					h.addInput(ros); 		/**change ros to activation function if there is one*/
+					h.addInput(ros); 		/**change ros to activation function */
 				}
 			}
 
 			for(Neuron n: hiddenLayer)
 			{
 				double hiddenOut = n.computeOutput(); 	// Then tell the neuron to compute its output
+				//computeOutput(weight); add the weight into the function
 				for(Neuron o: outLayer)
 				{
 					o.addInput(hiddenOut);				//Then pass that output into the inputs of the next layer nodes
@@ -146,18 +151,19 @@ public class NeuralNetwork
 				networkOutput[iter] = out;
 				expectedOutputs[iter] = 1; 		/**change 1 to expected value based on input */
 				double e = Math.pow(out - expectedOutputs[iter], 2);
+				error += e;		//for sum of output errors
 				iter++;
 			}
+			/**for ave error: error = error/outLayer.size();*/
 
 			if(isConverged())		//at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
 			{
 				break; 		//no need to backprop
 			}
-			//once converged test performance on held-out data
-			//performanceMethodCheck()
 			
 			backProp();	
 		}
+		performanceMetricCheck(); 	//add this method
 		// then call print(NeuralNetwork); to see outputs, weights and error values
 
 	}
@@ -180,6 +186,7 @@ public class NeuralNetwork
 					holder = rand.nextDouble();
 				}
 				this.weights[i][j] = randLowerBound + (randUpperBound - randLowerBound) * holder;
+				this.prevDeltaWeights[i][j] = 1.0;
 			}
 		}
 	}
@@ -218,20 +225,65 @@ public class NeuralNetwork
 
 	private void backProp()
 	{
-		/* calculate error (means squared error)
-		 * create global average error value to update each backProp() for isConverged() to check.
-		 */
-
-		/*BackProp should be possible by using Neuron IDs to go back through network and update weights
-		 * based on closeness to true value. 
-		 */
-
-		//neuron.updateWeight(double w);
+		int i = inLayer.size() + 1; 	//first hidden neuron
+		int j = inLayer.size() + hiddenLayer.size() + 1; //first output layer neuron
+		int k = 0;
+		for(Neuron n: outLayer)
+		{
+			for(Neuron h: hiddenLayer)		//for every output neuron, for every in-connection: int k = 0; k < hiddenLayer.size(); k++
+			{
+				double bo = n.NeuronOutput;
+				double bh = h.NeuronOutput;
+				double bOutput = expectedOutputs[k];	//make sure expected outputs are working
+				
+				double bPartialDerivative = -bo * (1 - bo) * bh * (bOutput - bo);
+				double bDeltaWeight = -learningRate * bPartialDerivative;
+				
+				double bNewWeight = weights[i][j] + bDeltaWeight;
+				weights[i][j] = bNewWeight * prevDeltaWeights[i][j];		//for momentum, add m to bNewWeight
+				
+				prevDeltaWeights[i][j] = bDeltaWeight;
+				i++;
+			}
+			i = inLayer.size() + 1;
+			j++;
+			k++;
+		}
+		
+		i = 0;
+		j = inLayer.size() + 1;
+		k = 0;
+		for(Neuron n: hiddenLayer)
+		{
+			for(Neuron in: inLayer)
+			{
+				double bh = n.NeuronOutput;
+				double bi = in.NeuronOutput;
+				double bSumOutputs = 0;
+				int l = inLayer.size() + hiddenLayer.size() + 1;	//first output node
+				for(Neuron o: outLayer)
+				{
+					double bw = weights[j][l];
+					double bOutput = expectedOutputs[k];
+					double bo = o.NeuronOutput;
+					bSumOutputs = bSumOutputs + (-(bOutput - bo) * bo * (1 - bo) * bw);
+					k++;
+				}
+				double bPartialDerivative = bh * (1 - bh) * bi * bSumOutputs;
+				double bDeltaWeight = -learningRate * bPartialDerivative;
+				double bNewWeight = weights[i][j] + bDeltaWeight;
+				weights[i][j] = bNewWeight * prevDeltaWeights[i][j];
+				prevDeltaWeights[i][j] = bDeltaWeight;
+				k = 0;
+				i++;
+			}
+			j++;
+		}
 	}
 
 	private void performanceMetricCheck()
 	{
-		//uses the withheld data to run through weighted network and check means squared error
+		//uses the held out data to run through weighted network and check means squared error
 	}
 
 	private void print(NeuralNetwork n)

@@ -11,7 +11,7 @@ public class Neuron
 	public final int id;		//might need an individual node ID for backprop
 	private ArrayList<Neuron> connections = new ArrayList<Neuron>();	//list of nodes this node is connected to (next layer of network)
 	private List<Double> prevLayerOutputs = new ArrayList<Double>();	//This way neuron can receive previous layer's outputs dinamically and then compute summation later
-
+	public double NeuronOutput;
 	public static void main(String[] args) 
 	{
 		/*
@@ -44,19 +44,14 @@ public class Neuron
 		double summation = 0;
 		for(Double outs: prevLayerOutputs)
 		{
-			summation = summation + outs;			//perform summation of prevLayerOutputs
+			summation = summation + outs;			//add weights logic to addInput? or conputeOutput?
 			//fix this to match actual summation function
 		}
 		double output = activationFun(summation);
-		
+		NeuronOutput = output; 
 		return output; //summation of all connections ran through activation function
 	}
 	
-	public void updateWeight(double w)
-	{
-		//for backpropagation function in Driver
-		//based off of ID
-	}
 	
 	private double activationFun(double o)
 	{
