@@ -20,7 +20,7 @@ public class NeuralNetwork
 	double[] expectedOutputs;
 	double learningRate = .5;			//CHANGE THIS to a real learning rate!
 	int error;
-
+  
 	public static void main(String[] args) 
 	{
 		for (int i = 0; i < args.length; i++) 
@@ -189,6 +189,7 @@ public class NeuralNetwork
 				this.prevDeltaWeights[i][j] = 1.0;
 			}
 		}
+
 	}
 
 	private void generateData(int version)
