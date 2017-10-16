@@ -29,9 +29,6 @@ public class Neuron
 	public void addConnection(Neuron n)
 	{
 		connections.add(n);
-		/* adding every connection to every node we create seems really tedious,
-		 * even if it's just during initialization. Is there another way maybe?
-		 */
 	}
 	
 	public void addInput(double o)
@@ -44,8 +41,7 @@ public class Neuron
 		double summation = 0;
 		for(Double outs: prevLayerOutputs)
 		{
-			summation = summation + outs;			//add weights logic to addInput? or conputeOutput?
-			//fix this to match actual summation function
+			summation = summation + outs;
 		}
 		double output = activationFun(summation);
 		NeuronOutput = output; 
@@ -67,7 +63,7 @@ public class Neuron
                         //exp((-||x-xj||^2)/2sigma^2))
                         //xj is vector representing the funtion center
                     
-                        double s=0; //max pairwise distance between clusters(?)/squareroot of number of clusters*2
+                        double s=.5; //max pairwise distance between clusters(?)/squareroot of number of clusters*2
                         //large sigma might cause data to become linear
                         //s could be T times the distance between node and neighbor where T=[1,1.5]
                         

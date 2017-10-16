@@ -31,7 +31,7 @@ public class NeuralNetwork {
     double minError = 0.0001;
     ArrayList<Double>[] inputVector;
     ArrayList<Double> output = new ArrayList<Double>();
-    String pathToData = "C:\\Users\\Keinan\\Documents\\GitHub\\NeuralNetwork\\projectPackage\\NeuralNetwork\\lib\\";        //Change this for your machine.
+    String pathToData = "C:\\Users\\jadin_000\\Documents\\DS-5 Workspace\\NeuralNetwork\\src\\";        //Change this for your machine.
 
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -42,15 +42,15 @@ public class NeuralNetwork {
         String hid = args[1];
         String node = args[2];
         String out = args[3];
-		//parse to ints and construct new NeuralNetwork(in, hid, node, out);
-		//Neuron.radialBiasActFun = true;		//if Radial Basis network
+		Neuron.radialBiasActFun = true;		//if Radial Basis network
         //Neuron.MLFActFun = true; 			//if MLF network
         NeuralNetwork net = new NeuralNetwork(Integer.parseInt(in), Integer.parseInt(hid), Integer.parseInt(node), Integer.parseInt(out));
         net.loadData(Integer.parseInt(in));
         net.train(net);
     }
 
-    public NeuralNetwork(int inputs, int hiddenL, int nodes, int outputs) {
+    public NeuralNetwork(int inputs, int hiddenL, int nodes, int outputs) 
+    {
         this.inputs = inputs;
         this.hiddenL = hiddenL;		//a 3 layer network would have a hiddenL input value of 1
         this.nodes = nodes;			//maybe pass in an array if number of nodes is by layer. Would require some sort of console input instructions
@@ -58,7 +58,7 @@ public class NeuralNetwork {
         //To-Do: initialize random weights
         //Create wights double array and methods to get and update a weight
 
-        for (int i = 0; i < hiddenL; i++) //construct layer by layer
+        for (int i = 0; i < hiddenL + 2; i++) //construct layer by layer
         {
             if (i == 0) //input layer
             {
@@ -178,7 +178,7 @@ public class NeuralNetwork {
 				print(this);
 			}
 		}
-		
+		maxRuns = maxRuns - 1;
 		//oh and overfitting
 		//a large enough difference in the aveError and testing data error based on acceleration of the difference
 
@@ -186,51 +186,76 @@ public class NeuralNetwork {
 	}
 
     private void train(NeuralNetwork net) {
-
+    	int run = 0;
+    	double[] networkOutput = new double[outLayer.size()];
         while (!converged) //train network
         {
+        	
             expectedOutputs = new double[inputs];
-            //input these from rosenbrock function based on inputs
 
             error = 0;
-            for (Neuron n : inLayer) {
-                double ros = 1;		//change to rosenbrock function outputs
+            int j = 0;
+            double[] temp = new double[inputs];
+            for(int i = 0; i < inputs; i++)
+            {
+            	System.out.println("i: " + i);
+            	System.out.println("run: " + run);
+            	temp[i] = inputVector[i].get(run);
+            }
+            System.out.println("run: " + run);
+            run++;
+            for (Neuron n : inLayer) 
+            {
+                double ros = temp[j];		//change to rosenbrock function outputs
                 n.addInput(ros);
-                //hidden layer activation function??
+                double o = n.computeOutput();
+                
+                int k = inLayer.size() - 1;		//first hidden layer node
                 for (Neuron h : hiddenLayer) //add to all nodes in next layer
                 {
-                    h.addInput(ros);
-                    /**
-                     * change ros to activation function
-                     */
+                	double w = weights[j][k];
+                	o = o * w;
+                    h.addInput(o);
+                    k++;
                 }
+                j++;
             }
 
-            for (Neuron n : hiddenLayer) {
+            j = inLayer.size() - 1;
+            for (Neuron n : hiddenLayer) 
+            {
+            	int k = inLayer.size() + hiddenLayer.size() -1; 	//first output layer node
                 double hiddenOut = n.computeOutput(); 	// Then tell the neuron to compute its output
-                //computeOutput(weight); add the weight into the function
-                for (Neuron o : outLayer) {
-                    o.addInput(hiddenOut);				//Then pass that output into the inputs of the next layer nodes
+                
+                for (Neuron o: outLayer) 
+                {
+                	double w = weights[j][k];
+                	hiddenOut = hiddenOut * w;
+                    o.addInput(hiddenOut);				//Then pass (output * weight) into the inputs of the next layer nodes
+                    k++;
                 }
+                j++;
             }
-            double[] networkOutput = new double[outLayer.size()];	//linearly activate by using this array of values
+            
+            
             int iter = 0;
             for (Neuron o : outLayer) {
                 double out = o.computeOutput();
                 networkOutput[iter] = out;
-                expectedOutputs[iter] = 1;
-                /**
-                 * change 1 to expected value based on input
-                 */
+                expectedOutputs[iter] = output.get(iter);
+                
+                System.out.println("computedOutput: " + out);
+                System.out.println("expectedOut: " + expectedOutputs[iter]);
                 double e = Math.pow(out - expectedOutputs[iter], 2);
+                System.out.println("e: " + e);
                 error += e;		//for sum of output errors
                 iter++;
             }
-            /**
-             * for ave error: error = error/outLayer.size();
-             */
+            System.out.println("error: " + error);
+            System.out.println("outSize: " + outLayer.size());
+            aveError = (error/(outLayer.size()));
 
-            if (isConverged()) //at end of each iteration check if converged. Method will handle min acceptable error and max runs amount
+            if (isConverged()) //at end of each iteration check if converged.
             {
                 break; 		//no need to backprop
             }
@@ -238,7 +263,7 @@ public class NeuralNetwork {
             backProp();
         }
         performanceMetricCheck(); 	//add this method
-        // then call print(NeuralNetwork); to see outputs, weights and error values
+        //print(this);
 
     }
 
@@ -249,6 +274,7 @@ public class NeuralNetwork {
         //update the hashmap/weights table to random values
         int dim = inLayer.size() + hiddenLayer.size() + outLayer.size();
         this.weights = new Double[dim][dim];
+        this.prevDeltaWeights = new Double[dim][dim];
         double randUpperBound = Math.sqrt(6 / (inLayer.size() + outLayer.size()));      // according to https://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
         double randLowerBound = randUpperBound * -1;
         Random rand = new Random();
@@ -264,32 +290,10 @@ public class NeuralNetwork {
         }
     }
 
-    private void generateData(int version) {
-		//Rosenbrock function here
-        //normalized data for radial basis and MLF networks have different ranges
-        if (version == 2) //we have to do the five versions (2-6 dimensions)
-        {
-
-        } else if (version == 3) {
-
-        } else if (version == 4) {
-            //I'm assuming each version will have to execute completely differently
-        } else if (version == 5) {
-            //If there's a more elegant way to specialize algorithm please implement it here 
-        } else if (version == 6) {
-            //we should save the data so that we don't have to recompute it every time we do an iteration
-        }
-    }
-
-    private double checkValue(double output) //check how close output was to true Rosenbrock
-    {
-        //some sort of closeness-to-true-value error measurement system here. [0, 1] probably
-        return 0;
-    }
 
     private void backProp() {
-        int i = inLayer.size() + 1; 	//first hidden neuron
-        int j = inLayer.size() + hiddenLayer.size() + 1; //first output layer neuron
+        int i = inLayer.size() - 1; 	//first hidden neuron
+        int j = inLayer.size() + hiddenLayer.size() - 1; //first output layer neuron
         int k = 0;
         for (Neuron n : outLayer) {
             for (Neuron h : hiddenLayer) //for every output neuron, for every in-connection: int k = 0; k < hiddenLayer.size(); k++
@@ -307,20 +311,20 @@ public class NeuralNetwork {
                 prevDeltaWeights[i][j] = bDeltaWeight;
                 i++;
             }
-            i = inLayer.size() + 1;
+            i = inLayer.size() - 1;
             j++;
             k++;
         }
 
         i = 0;
-        j = inLayer.size() + 1;
+        j = inLayer.size() - 1; //first hidden neuron
         k = 0;
         for (Neuron n : hiddenLayer) {
             for (Neuron in : inLayer) {
                 double bh = n.NeuronOutput;
                 double bi = in.NeuronOutput;
                 double bSumOutputs = 0;
-                int l = inLayer.size() + hiddenLayer.size() + 1;	//first output node
+                int l = inLayer.size() + hiddenLayer.size() - 1;	//first output node
                 for (Neuron o : outLayer) {
                     double bw = weights[j][l];
                     double bOutput = expectedOutputs[k];
@@ -347,7 +351,7 @@ public class NeuralNetwork {
     private void print(NeuralNetwork n)
 	{
 		printWeights();
-		System.out.println("Outputs: " + Arrays.asList(networkOutput));
+		System.out.println("Outputs: " + networkOutput[0]);
 		System.out.println("Error: " + aveError);
 		
 		//print number of runs
@@ -359,23 +363,28 @@ public class NeuralNetwork {
 		System.out.println("Input Layer to Hidden Layer:");
 		for(i = 0; i < inLayer.size();i++)
 		{
+			System.out.print("Node " + i + ": ");
 			double[] ws = new double[inLayer.size()];
 			for(int j = 0; j < hiddenLayer.size(); j++)
 			{
 				ws[j] = weights[i][j];
+				System.out.print(" " + ws[j]);
 			}
-			System.out.println("Node " + i + ": " + Arrays.asList(ws));
+			
 		}
 		
 		System.out.println("Hidden Layer to Output Layer:");
 		for(i = inLayer.size() + 1; i < hiddenLayer.size();i++)
 		{
 			double[] ws = new double[hiddenLayer.size()];
+			System.out.print("Node " + i + ": ");
 			for(int j = hiddenLayer.size() + 1; j < outLayer.size(); j++)
 			{
 				ws[j] = weights[i][j];
+				System.out.print(" " + ws[j]);
 			}
-			System.out.println("Node " + i + ": " + Arrays.asList(ws));
+			System.out.println("");
+			
 		}
 	}
 
