@@ -22,12 +22,12 @@ public class NeuralNetwork {
     ArrayList<Neuron> outLayer = new ArrayList<Neuron>();
     Double[][] weights = null;			//weights[i][j] = weight at connection node i to node j
     Double[][] prevDeltaWeights = null;
-    Double[] networkOutput;
+    double[] networkOutput;
     double[] expectedOutputs;
-    double learningRate = .5;			//CHANGE THIS to a real learning rate!
+    double learningRate = .9;			//CHANGE THIS to a real learning rate!
     int error;
     double aveError;
-    int maxRuns = 3000;
+    int maxRuns = 10000 - 1;
     double minError = 0.0001;
     ArrayList<Double>[] inputVector;
     ArrayList<Double> output = new ArrayList<Double>();
@@ -187,30 +187,39 @@ public class NeuralNetwork {
 
     private void train(NeuralNetwork net) {
     	int run = 0;
-    	double[] networkOutput = new double[outLayer.size()];
+    	networkOutput = new double[outLayer.size()];
         while (!converged) //train network
         {
-        	
-            expectedOutputs = new double[inputs];
-
+        	System.out.println("run: " + run);
             error = 0;
             int j = 0;
             double[] temp = new double[inputs];
             for(int i = 0; i < inputs; i++)
             {
-            	System.out.println("i: " + i);
-            	System.out.println("run: " + run);
             	temp[i] = inputVector[i].get(run);
             }
-            System.out.println("run: " + run);
+            double norm = 0;
+            for(int i = 0; i < temp.length; i++)
+            {
+            	norm = norm + (temp[i] * temp[i]);
+            }
+            norm = Math.sqrt(norm);
+            for(int i = 0; i < temp.length; i++)
+            {
+            	temp[i] = temp[i]/norm;
+            }
             run++;
             for (Neuron n : inLayer) 
             {
                 double ros = temp[j];		//change to rosenbrock function outputs
                 n.addInput(ros);
                 double o = n.computeOutput();
+                if(o == 0.0)
+                {
+                	o = .00001;
+                }
                 
-                int k = inLayer.size() - 1;		//first hidden layer node
+                int k = inLayer.size();		//first hidden layer node
                 for (Neuron h : hiddenLayer) //add to all nodes in next layer
                 {
                 	double w = weights[j][k];
@@ -221,11 +230,15 @@ public class NeuralNetwork {
                 j++;
             }
 
-            j = inLayer.size() - 1;
+            j = inLayer.size();
             for (Neuron n : hiddenLayer) 
             {
-            	int k = inLayer.size() + hiddenLayer.size() -1; 	//first output layer node
+            	int k = inLayer.size() + hiddenLayer.size(); 	//first output layer node
                 double hiddenOut = n.computeOutput(); 	// Then tell the neuron to compute its output
+                if(hiddenOut == 0.0)
+                {
+                	hiddenOut = .00001;
+                }
                 
                 for (Neuron o: outLayer) 
                 {
@@ -237,10 +250,15 @@ public class NeuralNetwork {
                 j++;
             }
             
-            
+            expectedOutputs = new double[outLayer.size()];
             int iter = 0;
             for (Neuron o : outLayer) {
                 double out = o.computeOutput();
+                
+                if(out == 0.0)
+                {
+                	out = .00001;
+                }
                 networkOutput[iter] = out;
                 expectedOutputs[iter] = output.get(iter);
                 
@@ -252,15 +270,17 @@ public class NeuralNetwork {
                 iter++;
             }
             System.out.println("error: " + error);
-            System.out.println("outSize: " + outLayer.size());
             aveError = (error/(outLayer.size()));
 
             if (isConverged()) //at end of each iteration check if converged.
             {
                 break; 		//no need to backprop
             }
-
+//            System.out.println("top-------------");
+//            printWeights();
             backProp();
+//            printWeights();
+//            System.out.println("^-------------bottom");
         }
         performanceMetricCheck(); 	//add this method
         //print(this);
@@ -292,8 +312,8 @@ public class NeuralNetwork {
 
 
     private void backProp() {
-        int i = inLayer.size() - 1; 	//first hidden neuron
-        int j = inLayer.size() + hiddenLayer.size() - 1; //first output layer neuron
+        int i = inLayer.size(); 	//first hidden neuron
+        int j = inLayer.size() + hiddenLayer.size(); //first output layer neuron
         int k = 0;
         for (Neuron n : outLayer) {
             for (Neuron h : hiddenLayer) //for every output neuron, for every in-connection: int k = 0; k < hiddenLayer.size(); k++
@@ -311,20 +331,20 @@ public class NeuralNetwork {
                 prevDeltaWeights[i][j] = bDeltaWeight;
                 i++;
             }
-            i = inLayer.size() - 1;
+            i = inLayer.size();
             j++;
             k++;
         }
 
         i = 0;
-        j = inLayer.size() - 1; //first hidden neuron
+        j = inLayer.size(); //first hidden neuron
         k = 0;
         for (Neuron n : hiddenLayer) {
             for (Neuron in : inLayer) {
                 double bh = n.NeuronOutput;
                 double bi = in.NeuronOutput;
                 double bSumOutputs = 0;
-                int l = inLayer.size() + hiddenLayer.size() - 1;	//first output node
+                int l = inLayer.size() + hiddenLayer.size();	//first output node
                 for (Neuron o : outLayer) {
                     double bw = weights[j][l];
                     double bOutput = expectedOutputs[k];
@@ -351,8 +371,12 @@ public class NeuralNetwork {
     private void print(NeuralNetwork n)
 	{
 		printWeights();
-		System.out.println("Outputs: " + networkOutput[0]);
-		System.out.println("Error: " + aveError);
+		if(networkOutput != null)
+		{
+			System.out.println("Outputs: " + networkOutput[0]);
+			System.out.println("Error: " + aveError);
+		}
+		
 		
 		//print number of runs
 	}
@@ -370,19 +394,22 @@ public class NeuralNetwork {
 				ws[j] = weights[i][j];
 				System.out.print(" " + ws[j]);
 			}
-			
+			System.out.println("");
 		}
+		System.out.println("");
 		
 		System.out.println("Hidden Layer to Output Layer:");
-		for(i = inLayer.size() + 1; i < hiddenLayer.size();i++)
+		for(i = inLayer.size() ; i < hiddenLayer.size() + inLayer.size();i++)
 		{
 			double[] ws = new double[hiddenLayer.size()];
 			System.out.print("Node " + i + ": ");
-			for(int j = hiddenLayer.size() + 1; j < outLayer.size(); j++)
+			int k = 0;
+			for(int j = hiddenLayer.size() + inLayer.size(); j < inLayer.size() + hiddenLayer.size() + 1; j++)
 			{
-				ws[j] = weights[i][j];
-				System.out.print(" " + ws[j]);
+				ws[k] = weights[i][j];
+				System.out.print(" " + ws[k]);
 			}
+			k++;
 			System.out.println("");
 			
 		}
